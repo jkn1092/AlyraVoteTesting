@@ -4,8 +4,8 @@ const { expect } = require('chai');
 
 contract("Voting", accounts => {
 
-    const _admin = accounts[0];
-    const _voters = {
+    const admin = accounts[0];
+    const voters = {
         0 : accounts[1],
         1 : accounts[2],
         2 : accounts[3],
@@ -23,7 +23,7 @@ contract("Voting", accounts => {
     describe('Main Testing', function () {
 
         before('create an instance of the contract', async function () {
-            votingInstance = await Voting.new({from: _admin});
+            votingInstance = await Voting.new({from: admin});
         })
 
         /**
@@ -45,31 +45,31 @@ contract("Voting", accounts => {
             });
 
             it('should revert with not authorized', async function () {
-                await expectRevert(votingInstance.addVoter(_voters[0], {from: _voters[0]}),
+                await expectRevert(votingInstance.addVoter(voters[0], {from: voters[0]}),
                     "Ownable: caller is not the owner.");
             });
 
             it('should emit events VoterRegistered', async function () {
-                for (const _voter of Object.values(_voters) ) {
-                    let result = await votingInstance.addVoter(_voter, {from: _admin});
-                    await expectEvent(result, 'VoterRegistered',{ voterAddress: _voter });
+                for (const voterAddress of Object.values(voters) ) {
+                    let result = await votingInstance.addVoter(voterAddress, {from: admin});
+                    await expectEvent(result, 'VoterRegistered',{ voterAddress: voterAddress });
                 }
             });
 
             it('should get isRegistered to true', async function () {
-                for (const _voter of Object.values(_voters) ) {
-                    let voter = await votingInstance.getVoter(_voter, {from: _voter});
+                for (const voterAddress of Object.values(voters) ) {
+                    let voter = await votingInstance.getVoter(voterAddress, {from: voterAddress});
                     await expect(voter.isRegistered).to.be.equal(true);
                 }
             });
 
             it('should revert with already registered', async function () {
-                await expectRevert(votingInstance.addVoter(_voters[0], {from: _admin}),
+                await expectRevert(votingInstance.addVoter(voters[0], {from: admin}),
                     "Already registered");
             });
 
             it('should revert with voting session not started', async function () {
-                await expectRevert(votingInstance.endVotingSession({from: _admin}),
+                await expectRevert(votingInstance.endVotingSession({from: admin}),
                     "Voting session havent started yet");
             });
 
@@ -101,12 +101,12 @@ contract("Voting", accounts => {
         describe('ProposalsRegistration Workflow', function() {
 
             it('should revert with not allowed', async function () {
-                await expectRevert(votingInstance.addProposal("First one", {from: _voters[0]}),
+                await expectRevert(votingInstance.addProposal("First one", {from: voters[0]}),
                     "Proposals are not allowed yet");
             });
 
             it('should emit event WorkflowStatusChange ProposalsRegistrationStarted', async function () {
-                const result = await votingInstance.startProposalsRegistering({from: _admin});
+                const result = await votingInstance.startProposalsRegistering({from: admin});
                 expectEvent(result, 'WorkflowStatusChange',
                     { previousStatus: new BN(0), newStatus: new BN(1) });
             });
@@ -117,52 +117,52 @@ contract("Voting", accounts => {
             });
 
             it('should have proposal by default', async function () {
-                let proposal = await votingInstance.getOneProposal(0, {from: _voters[0]});
+                let proposal = await votingInstance.getOneProposal(0, {from: voters[0]});
                 expect(proposal.description).to.be.equal("GENESIS");
             });
 
             it('should revert with not a voter', async function () {
-                await expectRevert(votingInstance.addProposal("Test", {from: _admin}),
+                await expectRevert(votingInstance.addProposal("Test", {from: admin}),
                     "You're not a voter");
             });
 
             it('should revert', async function () {
-                await expectRevert(votingInstance.addProposal("", {from: _voters[0]}),
+                await expectRevert(votingInstance.addProposal("", {from: voters[0]}),
                     "Vous ne pouvez pas ne rien proposer");
             });
 
             it('should emit event ProposalRegistered for First', async function () {
-                const result = await votingInstance.addProposal("First", {from: _voters[0]});
+                const result = await votingInstance.addProposal("First", {from: voters[0]});
                 expectEvent(result, 'ProposalRegistered',{ proposalId: new BN(1) });
             });
 
             it('should be created with description First', async function () {
-                let proposal = await votingInstance.getOneProposal(1, {from: _voters[0]});
+                let proposal = await votingInstance.getOneProposal(1, {from: voters[0]});
                 expect(proposal.description).to.be.equal("First");
             });
 
             it('should emit event ProposalRegistered for Second', async function () {
-                const result = await votingInstance.addProposal("Second", {from: _voters[0]});
+                const result = await votingInstance.addProposal("Second", {from: voters[0]});
                 expectEvent(result, 'ProposalRegistered',{ proposalId: new BN(2) });
             });
 
             it('should be created with description Second', async function () {
-                let proposal = await votingInstance.getOneProposal(2, {from: _voters[0]});
+                let proposal = await votingInstance.getOneProposal(2, {from: voters[0]});
                 expect(proposal.description).to.be.equal("Second");
             });
 
             it('should emit event ProposalRegistered for Third', async function () {
-                const result = await votingInstance.addProposal("Third", {from: _voters[1]});
+                const result = await votingInstance.addProposal("Third", {from: voters[1]});
                 expectEvent(result, 'ProposalRegistered',{ proposalId: new BN(3) });
             });
 
             it('should be created with description Third', async function () {
-                let proposal = await votingInstance.getOneProposal(3, {from: _voters[0]});
+                let proposal = await votingInstance.getOneProposal(3, {from: voters[0]});
                 expect(proposal.description).to.be.equal("Third");
             });
 
             it('should emit event WorkflowStatusChange ProposalsRegistrationEnded', async function () {
-                const result = await votingInstance.endProposalsRegistering({from: _admin});
+                const result = await votingInstance.endProposalsRegistering({from: admin});
                 expectEvent(result, 'WorkflowStatusChange',
                     { previousStatus: new BN(1), newStatus: new BN(2) });
             });
@@ -199,12 +199,12 @@ contract("Voting", accounts => {
         describe('VotingSession Workflow', function() {
 
             it('should revert with voting session havent started', async function () {
-                await expectRevert(votingInstance.setVote(1, {from: _voters[0]}),
+                await expectRevert(votingInstance.setVote(1, {from: voters[0]}),
                     "Voting session havent started yet");
             });
 
             it('should emit event WorkflowStatusChange VotingSessionStarted', async function () {
-                const result = await votingInstance.startVotingSession({from: _admin});
+                const result = await votingInstance.startVotingSession({from: admin});
                 expectEvent(result, 'WorkflowStatusChange',
                     { previousStatus: new BN(2), newStatus: new BN(3) });
             });
@@ -215,34 +215,34 @@ contract("Voting", accounts => {
             });
 
             it('should revert with not a voter', async function () {
-                await expectRevert(votingInstance.setVote(1, {from: _admin}),
+                await expectRevert(votingInstance.setVote(1, {from: admin}),
                     "You're not a voter");
             });
 
             it('should revert with not found', async function () {
-                await expectRevert(votingInstance.setVote(100, {from: _voters[0]}),
+                await expectRevert(votingInstance.setVote(100, {from: voters[0]}),
                     "Proposal not found");
             });
 
             it('should emit event Voted for voters[0]', async function () {
-                const result = await votingInstance.setVote(1, {from: _voters[0]});
+                const result = await votingInstance.setVote(1, {from: voters[0]});
                 expectEvent(result, 'Voted',
-                    { voter: _voters[0], proposalId: new BN(1) });
+                    { voter: voters[0], proposalId: new BN(1) });
             });
 
             it('should set voters[0] hasVoted = true and votedProposalId = 1', async function () {
-                let voter = await votingInstance.getVoter(_voters[0], {from: _voters[0]});
+                let voter = await votingInstance.getVoter(voters[0], {from: voters[0]});
                 expect(voter.hasVoted).to.be.equal(true);
                 expect(voter.votedProposalId).to.be.bignumber.equal(new BN(1));
             });
 
             it('should revert with already voted', async function () {
-                await expectRevert(votingInstance.setVote(2, {from: _voters[0]}),
+                await expectRevert(votingInstance.setVote(2, {from: voters[0]}),
                     "You have already voted");
             });
 
             it('should emit events Voted voters', async function() {
-                for (const voterAddress of Object.values(_voters).slice(1)) {
+                for (const voterAddress of Object.values(voters).slice(1)) {
                     const result = await votingInstance.setVote(3, {from: voterAddress});
                     expectEvent(result, 'Voted',
                         { voter: voterAddress, proposalId: new BN(3) });
@@ -250,15 +250,15 @@ contract("Voting", accounts => {
             });
 
             it('should set voters hasVoted = true and votedProposalId = 3', async function () {
-                for (const voterAddress of Object.values(_voters).slice(1)) {
-                    let _voter = await votingInstance.getVoter(voterAddress, {from: _voters[0]});
-                    expect(_voter.hasVoted).to.be.equal(true);
-                    expect(_voter.votedProposalId).to.be.bignumber.equal(new BN(3));
+                for (const voterAddress of Object.values(voters).slice(1)) {
+                    let voter = await votingInstance.getVoter(voterAddress, {from: voters[0]});
+                    expect(voter.hasVoted).to.be.equal(true);
+                    expect(voter.votedProposalId).to.be.bignumber.equal(new BN(3));
                 }
             });
 
             it('should emit event WorkflowStatusChange VotingSessionEnded', async function () {
-                const result = await votingInstance.endVotingSession({from: _admin});
+                const result = await votingInstance.endVotingSession({from: admin});
                 expectEvent(result, 'WorkflowStatusChange',
                     { previousStatus: new BN(3), newStatus: new BN(4) });
             });
@@ -282,11 +282,11 @@ contract("Voting", accounts => {
         describe('VotesTallied', function() {
 
             it('should revert with not allowed', async function () {
-                await expectRevert(votingInstance.tallyVotes({from: _voters[0]}),"Ownable: caller is not the owner.");
+                await expectRevert(votingInstance.tallyVotes({from: voters[0]}),"Ownable: caller is not the owner.");
             });
 
             it('should tally votes and emit event WorkflowStatusChange VotesTallied', async function () {
-                const result = await votingInstance.tallyVotes({from: _admin});
+                const result = await votingInstance.tallyVotes({from: admin});
                 expectEvent(result, 'WorkflowStatusChange',
                     { previousStatus: new BN(4), newStatus: new BN(5) });
             });
@@ -312,15 +312,15 @@ contract("Voting", accounts => {
     describe('No Proposal No Vote Scenario', function () {
 
         before('create an instance of the contract', async function () {
-            votingInstance = await Voting.new({from: _admin});
+            votingInstance = await Voting.new({from: admin});
         })
 
         it('should pick default proposal GENESIS', async function () {
-            await votingInstance.startProposalsRegistering({from: _admin});
-            await votingInstance.endProposalsRegistering({from: _admin});
-            await votingInstance.startVotingSession({from: _admin});
-            await votingInstance.endVotingSession({from: _admin});
-            await votingInstance.tallyVotes({from: _admin});
+            await votingInstance.startProposalsRegistering({from: admin});
+            await votingInstance.endProposalsRegistering({from: admin});
+            await votingInstance.startVotingSession({from: admin});
+            await votingInstance.endVotingSession({from: admin});
+            await votingInstance.tallyVotes({from: admin});
 
             const winningProposalID = await votingInstance.winningProposalID.call();
             expect(winningProposalID).to.be.bignumber.equal(new BN(0));
@@ -334,29 +334,29 @@ contract("Voting", accounts => {
     describe('Draw Scenario', function () {
 
         before('create an instance of the contract', async function () {
-            votingInstance = await Voting.new({from: _admin});
+            votingInstance = await Voting.new({from: admin});
         })
 
         it('should pick first proposal', async function() {
-            for (const _voter of Object.values(_voters) ) {
-                await votingInstance.addVoter(_voter, {from: _admin});
+            for (const voterAddress of Object.values(voters) ) {
+                await votingInstance.addVoter(voterAddress, {from: admin});
             }
 
-            await votingInstance.startProposalsRegistering({from: _admin});
-            await votingInstance.addProposal("First", {from: _voters[0]});
-            await votingInstance.addProposal("Second", {from: _voters[0]});
-            await votingInstance.addProposal("Third", {from: _voters[1]});
-            await votingInstance.endProposalsRegistering({from: _admin});
+            await votingInstance.startProposalsRegistering({from: admin});
+            await votingInstance.addProposal("First", {from: voters[0]});
+            await votingInstance.addProposal("Second", {from: voters[0]});
+            await votingInstance.addProposal("Third", {from: voters[1]});
+            await votingInstance.endProposalsRegistering({from: admin});
 
-            await votingInstance.startVotingSession({from: _admin});
-            await votingInstance.setVote(1, {from: _voters[0]});
-            await votingInstance.setVote(1, {from: _voters[1]});
-            await votingInstance.setVote(2, {from: _voters[2]});
-            await votingInstance.setVote(3, {from: _voters[3]});
-            await votingInstance.setVote(3, {from: _voters[4]});
-            await votingInstance.endVotingSession({from: _admin});
+            await votingInstance.startVotingSession({from: admin});
+            await votingInstance.setVote(1, {from: voters[0]});
+            await votingInstance.setVote(1, {from: voters[1]});
+            await votingInstance.setVote(2, {from: voters[2]});
+            await votingInstance.setVote(3, {from: voters[3]});
+            await votingInstance.setVote(3, {from: voters[4]});
+            await votingInstance.endVotingSession({from: admin});
 
-            await votingInstance.tallyVotes({from: _admin});
+            await votingInstance.tallyVotes({from: admin});
             const winningProposalID = await votingInstance.winningProposalID.call();
             expect(winningProposalID).to.be.bignumber.equal(new BN(1));
         });
