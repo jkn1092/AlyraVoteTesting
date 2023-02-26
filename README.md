@@ -2,7 +2,7 @@
 
 AlyraVoteTesting est mon second TP rendu durant la formation de la session dev Satoshi d'Alyra.
 
-Ce TP consiste à évaluer mes compétences dans la gestion des tests pour des contrats.
+Ce TP consiste à évaluer mes compétences dans la gestion des tests sur des contrats.
 
 ## Installation
 
@@ -20,7 +20,7 @@ ganache
 truffle test
 ```
 
-## Les différents tests
+## Les différents scénarios de test
 
 ### Main Testing
 Cette partie consiste à tester les différents cas possibles avec expect, expectRevert et expectEvent.
