@@ -35,7 +35,10 @@ contract("Voting", accounts => {
          * - check emit event VoterRegistered
          * - check voters isRegistered is true
          * - check revert by registering a registered voter
+         * - check revert by ending registration proposal session
+         * - check revert by starting vote session
          * - check revert by ending vote session
+         * - check revert by tally votes
          */
         describe('RegisteringVoters Workflow', function () {
 
@@ -68,9 +71,24 @@ contract("Voting", accounts => {
                     "Already registered");
             });
 
+            it('should revert with registering proposals not started', async function () {
+                await expectRevert(votingInstance.endProposalsRegistering({from: admin}),
+                    "Registering proposals havent started yet");
+            });
+
+            it('should revert with registering proposals not finished', async function () {
+                await expectRevert(votingInstance.startVotingSession({from: admin}),
+                    "Registering proposals phase is not finished");
+            });
+
             it('should revert with voting session not started', async function () {
                 await expectRevert(votingInstance.endVotingSession({from: admin}),
                     "Voting session havent started yet");
+            });
+
+            it('should revert with voting session not ended', async function () {
+                await expectRevert(votingInstance.tallyVotes({from: admin}),
+                    "Current status is not voting session ended");
             });
 
         });
