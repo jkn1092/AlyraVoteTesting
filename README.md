@@ -1,7 +1,9 @@
 # AlyraVoteTesting
 
-AlyraVoteTesting est mon second TP rendu durant la formation de la session dev Satoshi d'Alyra.
+AlyraVoteTesting is my second assignment submitted during the Satoshi dev session of Alyra training.
+This assignment aims to assess my skills in managing tests on contracts.
 
+AlyraVoteTesting est mon second TP rendu durant la formation de la session dev Satoshi d'Alyra.
 Ce TP consiste à évaluer mes compétences dans la gestion des tests sur des contrats.
 
 ## Installation
